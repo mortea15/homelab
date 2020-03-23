@@ -1,0 +1,32 @@
+version: "3"
+services:
+        heimdall:
+                image: linuxserver/heimdall
+                hostname: heimdall
+                container_name: heimdall
+                restart: always
+                ports:
+                        - "6080:80"
+                        - "6443:443"
+                volumes:
+                        - /opt/heimdall:/config
+                environment:
+                        - PUID=1000
+                        - PGID=985
+                        - TZ=${TZ}
+                labels:
+                        - "traefik.enable=true"
+                        - "traefik.frontend.rule=HostRegexp:heim.${DOMAIN},{catchall:.*}"
+                        - "traefik.frontend.priority=1"
+                        - "traefik.backend=heimdall"
+                        - "traefik.port=80"
+                        - "traefik.http.routers.heimdall.rule=Host(`heim.${DOMAIN}`)"
+                        - "traefik.http.services.heimdall.loadbalancer.server.port=80"
+                        - "traefik.http.routers.heimdall.tls.certresolver=le-dns-duck"
+                networks:
+                        default:
+                                ipv4_address: 10.10.10.150
+networks:
+        default:
+                external:
+                        name: labnet
