@@ -1,0 +1,332 @@
+version: "3"
+services:
+        plex:
+                image: plexinc/pms-docker
+                hostname: plex
+                container_name: plex
+                restart: always
+                ports:
+                        - "32400:32400/tcp"
+                        - "3005:3005/tcp"
+                        - "8324:8324/tcp"
+                        - "32469:32469/tcp"
+                        - "1900:1900/udp"
+                        - "32410:32410/udp"
+                        - "32412:32412/udp"
+                        - "32413:32413/udp"
+                        - "32414:32414/udp"
+                volumes:
+                        - /opt/plex/database:/config
+                        - /opt/plex/transcode_temp:/transcode
+                        - /media:/data
+                environment:
+                        - PUID=1000
+                        - PGID=985
+                        - TZ=${TZ}
+                        - PLEX_CLAIM=${PLEX_CLAIM}
+                labels:
+                        - "traefik.enable=true"
+                        - "traefik.frontend.rule=HostRegexp:plex.${DOMAIN},{catchall:.*}"
+                        - "traefik.frontend.priority=1"
+                        - "traefik.backend=plex"
+                        - "traefik.port=32400"
+                        - "traefik.http.routers.plex.rule=Host(`plex.${DOMAIN}`)"
+                        - "traefik.http.services.plex.loadbalancer.server.port=32400"
+                        - "traefik.http.routers.plex.tls.certresolver=le-dns-duck"
+                networks:
+                        default:
+                                ipv4_address: 10.10.10.100
+
+        airsonic:
+                image: linuxserver/airsonic
+                hostname: airsonic
+                container_name: airsonic
+                restart: always
+                ports:
+                        - "4040:4040"
+                        - "1901:1900/udp"
+                volumes:
+                        - /opt/airsonic/config:/config
+                        - /media/music:/music
+                        - /media/playlists:/playlists
+                        - /media/podcasts:/podcasts
+                        #- /media:/media
+                environment:
+                        - PUID=1000
+                        - PGID=985
+                        - TZ=${TZ}
+                        - UMASK_SET=022
+                        - UPNP_PORT=1900
+                labels:
+                        - "traefik.enable=true"
+                        - "traefik.frontend.rule=HostRegexp:airsonic.${DOMAIN},{catchall:.*}"
+                        - "traefik.frontend.priority=1"
+                        - "traefik.backend=airsonic"
+                        - "traefik.port=4040"
+                        - "traefik.http.routers.airsonic.rule=Host(`airsonic.${DOMAIN}`)"
+                        - "traefik.http.services.airsonic.loadbalancer.server.port=4040"
+                        - "traefik.http.routers.airsonic.tls.certresolver=le-dns-duck"
+                networks:
+                        default:
+                                ipv4_address: 10.10.10.101
+
+        # Managers
+        radarr:
+                image: linuxserver/radarr
+                hostname: radarr
+                container_name: radarr
+                restart: always
+                ports:
+                        - "7878:7878"
+                volumes:
+                        - /opt/radarr/config:/config
+                        - /media/tv/movies:/movies
+                        - /media/downloads:/downloads
+                environment:
+                        - PUID=1000
+                        - PGID=985
+                        - TZ=${TZ}
+                        - UMASK_SET=022
+                labels:
+                        - "traefik.enable=true"
+                        - "traefik.frontend.rule=HostRegexp:radarr.${DOMAIN},{catchall:.*}"
+                        - "traefik.frontend.priority=1"
+                        - "traefik.backend=radarr"
+                        - "traefik.port=7878"
+                        - "traefik.http.routers.radarr.rule=Host(`radarr.${DOMAIN}`)"
+                        - "traefik.http.services.radarr.loadbalancer.server.port=7878"
+                        - "traefik.http.routers.radarr.tls.certresolver=le-dns-duck"
+                networks:
+                        default:
+                                ipv4_address: 10.10.10.110
+
+        sonarr:
+                image: linuxserver/sonarr
+                hostname: sonarr
+                container_name: sonarr
+                restart: always
+                ports:
+                        - "8989:8989"
+                volumes:
+                        - /opt/sonarr/config:/config
+                        - /media/tv/series:/tv
+                        - /media/downloads:/downloads
+                environment:
+                        - PUID=1000
+                        - PGID=985
+                        - TZ=${TZ}
+                        - UMASK_SET=022
+                labels:
+                        - "traefik.enable=true"
+                        - "traefik.frontend.rule=HostRegexp:sonarr.${DOMAIN},{catchall:.*}"
+                        - "traefik.frontend.priority=1"
+                        - "traefik.backend=sonarr"
+                        - "traefik.port=8989"
+                        - "traefik.http.routers.sonarr.rule=Host(`sonarr.${DOMAIN}`)"
+                        - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
+                        - "traefik.http.routers.sonarr.tls.certresolver=le-dns-duck"
+                networks:
+                        default:
+                                ipv4_address: 10.10.10.111
+
+        bazarr:
+                image: linuxserver/bazarr
+                hostname: bazarr
+                container_name: bazarr
+                restart: always
+                ports:
+                        - "6767:6767"
+                volumes:
+                        - /opt/bazarr/config:/config
+                        - /media/tv/movies:/movies
+                        - /media/tv/series:/tv
+                environment:
+                        - PUID=1000
+                        - PGID=985
+                        - TZ=${TZ}
+                        - UMASK_SET=022
+                labels:
+                        - "traefik.enable=true"
+                        - "traefik.frontend.rule=HostRegexp:bazarr.${DOMAIN},{catchall:.*}"
+                        - "traefik.frontend.priority=1"
+                        - "traefik.backend=bazarr"
+                        - "traefik.port=6767"
+                        - "traefik.http.routers.bazarr.rule=Host(`bazarr.${DOMAIN}`)"
+                        - "traefik.http.services.bazarr.loadbalancer.server.port=6767" 
+                        - "traefik.http.routers.bazarr.tls.certresolver=le-dns-duck"
+                networks:
+                        default:
+                                ipv4_address: 10.10.10.112
+
+        lidarr:
+                image: linuxserver/lidarr
+                hostname: lidarr
+                container_name: lidarr
+                restart: always
+                ports:
+                        - "8686:8686"
+                volumes:
+                        - /opt/lidarr/config:/config
+                        - /media/music:/music
+                        - /media/downloads:/downloads
+                environment:
+                        - PUID=1000
+                        - PGID=985
+                        - TZ=${TZ}
+                        - UMASK_SET=022
+                labels:
+                        - "traefik.enable=true"
+                        - "traefik.frontend.rule=HostRegexp:lidarr.${DOMAIN},{catchall:.*}"
+                        - "traefik.frontend.priority=1"
+                        - "traefik.backend=lidarr"
+                        - "traefik.port=8686"
+                        - "traefik.http.routers.lidarr.rule=Host(`lidarr.${DOMAIN}`)"
+                        - "traefik.http.services.lidarr.loadbalancer.server.port=8686"
+                        - "traefik.http.routers.lidarr.tls.certresolver=le-dns-duck"
+                networks:
+                        default:
+                                ipv4_address: 10.10.10.113
+        headphones:
+                image: linuxserver/headphones
+                hostname: headphones
+                container_name: headphones
+                restart: always
+                ports:
+                        - "8181:8181"
+                volumes:
+                        - /opt/headphones:/config
+                        - /media/downloads:/downloads
+                        - /media/music:/music
+                environment:
+                        - PUID=1000
+                        - PGID=985
+                        - TZ=${TZ}
+                labels:
+                        - "traefik.enable=true"
+                        - "traefik.frontend.rule=HostRegexp:headphones.${DOMAIN},{catchall:.*}"
+                        - "traefik.frontend.priority=1"
+                        - "traefik.backend=headphones"
+                        - "traefik.port=8181"
+                        - "traefik.http.routers.headphones.rule=Host(`headphones.${DOMAIN}`)"
+                        - "traefik.http.services.headphones.loadbalancer.server.port=8181"
+                        - "traefik.http.routers.headphones.tls.certresolver=le-dns-duck"
+                networks:
+                        default:
+                                ipv4_address: 10.10.10.114
+        picard:
+                image: mikenye/picard
+                hostname: picard
+                container_name: picard
+                restart: always
+                ports:
+                        - "5800:5800"
+                volumes:
+                        - /opt/picard:/config
+                        - /media/music:/storage
+                environment:
+                        - USER_ID=1000
+                        - GROUP_ID=985
+                        - UMASK=022
+                        - TZ=${TZ}
+                        - CLEAN_TMP_DIR=1
+                labels:
+                        - "traefik.enable=true"
+                        - "traefik.frontend.rule=HostRegexp:picard.${DOMAIN},{catchall:.*}"
+                        - "traefik.frontend.priority=1"
+                        - "traefik.backend=picard"
+                        - "traefik.port=5800"
+                        - "traefik.http.routers.picard.rule=Host(`picard.${DOMAIN}`)"
+                        - "traefik.http.services.picard.loadbalancer.server.port=5800"
+                        - "traefik.http.routers.picard.tls.certresolver=le-dns-duck"
+                networks:
+                        default:
+                                ipv4_address: 10.10.10.115
+
+        # Downloaders
+        transmission:
+                image: linuxserver/transmission
+                hostname: transmission
+                container_name: transmission
+                restart: always
+                ports:
+                        - "9091:9091"
+                        - "51413:51413"
+                        - "51413:51413/udp"
+                volumes:
+                        - /opt/transmission/config:/config
+                        - /media/downloads:/downloads
+                        - /media/torrents:/watch
+                environment:
+                        - PUID=1000
+                        - PGID=985
+                        - TZ=${TZ}
+                        - TRANSMISSION_WEB_HOME=/combustion-release/
+                        - USER=${TRANSMISSION_USER}
+                        - PASS=${TRANSMISSION_PASS}
+                labels:
+                        - "traefik.enable=true"
+                        - "traefik.frontend.rule=HostRegexp:bit.${DOMAIN},{catchall:.*}"
+                        - "traefik.frontend.priority=1"
+                        - "traefik.backend=transmission"
+                        - "traefik.port=9091"
+                        - "traefik.http.routers.transmission.rule=Host(`bit.${DOMAIN}`)"
+                        - "traefik.http.services.transmission.loadbalancer.server.port=9091"
+                        - "traefik.http.routers.transmission.tls.certresolver=le-dns-duck"
+                networks:
+                        default:
+                                ipv4_address: 10.10.10.120
+        ytdl:
+                image: mortea15/youtag-dl
+                hostname: ytdl
+                container_name: ytdl
+                restart: always
+                ports:
+                        - "8083:8080"
+                volumes:
+                        - /media/music:/music
+                environment:
+                        - TZ=${TZ}
+                labels:
+                        - "traefik.enable=true"
+                        - "traefik.frontend.rule=HostRegexp:ytdl.${DOMAIN},{catchall:.*}"
+                        - "traefik.frontend.priority=1"
+                        - "traefik.backend=ytdl"
+                        - "traefik.port=8080"
+                        - "traefik.http.routers.ytdl.rule=Host(`ytdl.${DOMAIN}`)"
+                        - "traefik.http.services.ytdl.loadbalancer.server.port=8080"
+                        - "traefik.http.routers.ytdl.tls.certresolver=le-dns-duck"
+                networks:
+                        default:
+                                ipv4_address: 10.10.10.121
+
+        # Indexers
+        jackett:
+                image: linuxserver/jackett
+                hostname: jackett
+                container_name: jackett
+                restart: always
+                ports:
+                        - "9117:9117"
+                volumes:
+                        - /opt/jackett/config:/config
+                        - /media/downloads:/downloads
+                environment:
+                        - PUID=1000
+                        - PGID=985
+                        - TZ=${TZ}
+                labels:
+                        - "traefik.enable=true"
+                        - "traefik.frontend.rule=HostRegexp:jackett.${DOMAIN},{catchall:.*}"
+                        - "traefik.frontend.priority=1"
+                        - "traefik.backend=jackett"
+                        - "traefik.port=9117"
+                        - "traefik.http.routers.jackett.rule=Host(`jackett.${DOMAIN}`)"
+                        - "traefik.http.services.jackett.loadbalancer.server.port=9117"
+                        - "traefik.http.routers.jackett.tls.certresolver=le-dns-duck"
+                networks:
+                        default:
+                                ipv4_address: 10.10.10.130
+networks:
+        default:
+                external:
+                        name: labnet
