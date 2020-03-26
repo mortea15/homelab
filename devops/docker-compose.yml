@@ -209,15 +209,23 @@ services:
                         - "traefik.frontend.priority=1"
                         - "traefik.backend=openvpn"
                         - "traefik.port=1194"
-                        - "traefik.http.routers.netdata.rule=Host(`ra.${DOMAIN}`)"
-                        - "traefik.http.services.netdata.loadbalancer.server.port=1194"
-                        - "traefik.http.routers.netdata.tls.certresolver=le-dns-duck"
+                        - "traefik.http.routers.openvpn.rule=Host(`ra.${DOMAIN}`)"
+                        - "traefik.http.services.openvpn.loadbalancer.server.port=1194"
+                        - "traefik.http.routers.openvpn.tls.certresolver=le-dns-duck"
                 networks:
                         default:
                                 ipv4_address: 10.10.10.11
                 cap_add:
                         - NET_ADMIN
-
+        antibox:
+                image: mortea15/antibox:cron
+                hostname: antibox
+                container_name: antibox
+                restart: always
+                #volumes:
+                        #- /var/log/antibox.log:/var/log/antibox.log
+                env_file:
+                        - antibox/list.env
 networks:
         default:
                 external:
