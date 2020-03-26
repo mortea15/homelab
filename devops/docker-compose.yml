@@ -199,6 +199,7 @@ services:
                 restart: always
                 ports:
                         - "1194:1194/udp"
+                        - "7505:7505"
                 volumes:
                         - /opt/openvpn:/etc/openvpn
                 environment:
