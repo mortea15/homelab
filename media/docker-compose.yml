@@ -245,13 +245,8 @@ services:
         # Downloaders
         transmission:
                 image: linuxserver/transmission
-                hostname: transmission
                 container_name: transmission
                 restart: always
-                ports:
-                        - "9091:9091"
-                        - "51413:51413"
-                        - "51413:51413/udp"
                 volumes:
                         - /opt/transmission/config:/config
                         - /media/downloads:/downloads
@@ -272,9 +267,9 @@ services:
                         - "traefik.http.routers.transmission.rule=Host(`bit.${DOMAIN}`)"
                         - "traefik.http.services.transmission.loadbalancer.server.port=9091"
                         - "traefik.http.routers.transmission.tls.certresolver=le-dns-duck"
-                networks:
-                        default:
-                                ipv4_address: 10.10.10.120
+                network_mode: service:cloak
+                depends_on:
+                        - cloak
         ytdl:
                 image: mortea15/youtag-dl
                 hostname: ytdl
@@ -326,6 +321,26 @@ services:
                 networks:
                         default:
                                 ipv4_address: 10.10.10.130
+
+        cloak:
+                image: dperson/openvpn-client
+                container_name: cloak
+                restart: always
+                volumes:
+                        - /opt/cloak/ovpn:/ovpn
+                environment:
+                        - TZ=EST
+                networks:
+                        default:
+                                ipv4_address: 10.10.10.5
+                dns:
+                        - 10.10.10.53
+                        - 1.1.1.1
+                cap_add:
+                        - NET_ADMIN
+                devices:
+                        - /dev/net/tun
+                command: openvpn --config /ovpn/germany.ovpn --auth-user-pass /ovpn/vpn.auth --auth-nocache
 networks:
         default:
                 external:
