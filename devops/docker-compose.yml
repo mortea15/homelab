@@ -12,18 +12,21 @@ services:
                 volumes:
                         - /var/run/docker.sock:/var/run/docker.sock:ro
                         - /opt/traefik/traefik.yml:/etc/traefik/traefik.yml
-                        - /opt/traefik/le/acme.json:/etc/traefik/le/acme.json
+                        - /opt/traefik/le/duck/acme.json:/etc/traefik/le/duck/acme.json
+                        - /opt/traefik/le/nc/acme.json:/etc/traefik/le/nc/acme.json
                 environment:
                         - DUCKDNS_TOKEN=${DUCKDNS_TOKEN}
+                        - NAMECHEAP_API_USER=${NAMECHEAP_USER}
+                        - NAMECHEAP_API_KEY=${NAMECHEAP_KEY}
                 labels:
                         - "traefik.enable=true"
                         - "traefik.port=8080"
                         - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)"
-                          #- "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
                         - "traefik.http.services.traefik.loadbalancer.server.port=8080"
                         - "traefik.http.routers.api.service=api@internal"
                         # TLS
-                        - "traefik.http.routers.traefik.tls.certresolver=le-dns-duck"
+                        # [le-dns-nc, le-dns-duck]
+                        - "traefik.http.routers.traefik.tls.certresolver=le-dns-nc"
                         - "traefik.http.routers.traefik.tls.domains[0].main=*.${DOMAIN}"
                         - "traefik.http.routers.traefik.tls.domains[0].sans=${DOMAIN}"
                         # HTTP => HTTPS
@@ -65,7 +68,7 @@ services:
                         - "traefik.http.services.pihole.loadbalancer.server.port=80"
                         - "traefik.http.middlewares.pihole_add_admin.addprefix.prefix=/admin"
                         - "traefik.http.routers.pihole.middlewares=pihole_add_admin"
-                        - "traefik.http.routers.pihole.tls.certresolver=le-dns-duck"
+                        - "traefik.http.routers.pihole.tls.certresolver=le-dns-nc"
                 networks:
                         default:
                                 ipv4_address: 10.10.10.53
@@ -132,7 +135,7 @@ services:
                         - "traefik.port=61208"
                         - "traefik.http.routers.glances.rule=Host(`glances.${DOMAIN}`)"
                         - "traefik.http.services.glances.loadbalancer.server.port=61208"
-                        - "traefik.http.routers.glances.tls.certresolver=le-dns-duck"
+                        - "traefik.http.routers.glances.tls.certresolver=le-dns-nc"
                 #net: host
                 networks:
                         default:
@@ -157,7 +160,7 @@ services:
                         - "traefik.port=9000"
                         - "traefik.http.routers.portainer.rule=Host(`portainer.${DOMAIN}`)"
                         - "traefik.http.services.portainer.loadbalancer.server.port=9000"
-                        - "traefik.http.routers.portainer.tls.certresolver=le-dns-duck"
+                        - "traefik.http.routers.portainer.tls.certresolver=le-dns-nc"
                 networks:
                         default:
                                 ipv4_address: 10.10.10.21
@@ -185,7 +188,7 @@ services:
                         - "traefik.port=19999"
                         - "traefik.http.routers.netdata.rule=Host(`netdata.${DOMAIN}`)"
                         - "traefik.http.services.netdata.loadbalancer.server.port=19999"
-                        - "traefik.http.routers.netdata.tls.certresolver=le-dns-duck"
+                        - "traefik.http.routers.netdata.tls.certresolver=le-dns-nc"
                 networks:
                         default:
                                 ipv4_address: 10.10.10.22
@@ -213,7 +216,7 @@ services:
                         - "traefik.port=1194"
                         - "traefik.http.routers.openvpn.rule=Host(`ra.${DOMAIN}`)"
                         - "traefik.http.services.openvpn.loadbalancer.server.port=1194"
-                        - "traefik.http.routers.openvpn.tls.certresolver=le-dns-duck"
+                        - "traefik.http.routers.openvpn.tls.certresolver=le-dns-nc"
                 networks:
                         default:
                                 ipv4_address: 10.10.10.11
@@ -242,7 +245,7 @@ services:
                         - "traefik.port=80"
                         - "traefik.http.routers.vpn_mgmt.rule=Host(`vpn.${DOMAIN}`)"
                         - "traefik.http.services.vpn_mgmt.loadbalancer.server.port=80"
-                        - "traefik.http.routers.vpn_mgmt.tls.certresolver=le-dns-duck"
+                        - "traefik.http.routers.vpn_mgmt.tls.certresolver=le-dns-nc"
                 networks:
                         default:
                                 ipv4_address: 10.10.10.12
