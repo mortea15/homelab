@@ -231,7 +231,7 @@ services:
                         - OPENVPNMONITOR_DEFAULT_DATETIMEFORMAT="%%d/%%m/%%Y"
                         - OPENVPNMONITOR_DEFAULT_LATITUDE=63
                         - OPENVPNMONITOR_DEFAULT_LONGITUDE=10
-                        - OPENVPNMONITOR_DEFAULT_MAPS=True
+                        - OPENVPNMONITOR_DEFAULT_MAPS=False
                         - OPENVPNMONITOR_DEFAULT_SITE=mediarch
                         - OPENVPNMONITOR_SITES_0_ALIAS=mediarch
                         - OPENVPNMONITOR_SITES_0_HOST=openvpn
