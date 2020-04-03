@@ -57,6 +57,7 @@ services:
                         - TZ=${TZ}
                         - UMASK_SET=022
                         - UPNP_PORT=1900
+                        - JAVA_OPTS=-Dserver.use-forward-headers=true -Dserver.connection-timeout=-1
                 labels:
                         - "traefik.enable=true"
                         - "traefik.frontend.rule=HostRegexp:airsonic.${DOMAIN},{catchall:.*}"
