@@ -39,7 +39,7 @@ services:
                                 ipv4_address: 10.10.10.10
 
         pihole:
-                image: pihole/pihole
+                image: pihole/pihole:latest
                 hostname: pihole
                 container_name: pihole
                 restart: always
@@ -50,14 +50,13 @@ services:
                         - "67:67/udp"
                         - "8443:443/tcp"
                 volumes:
-                        - /opt/pihole:/etc/pihole
-                        - /opt/dnsmasq.d:/etc/dnsmasq.d
+                        - /opt/pihole/:/etc/pihole/
+                        - /opt/dnsmasq.d/:/etc/dnsmasq.d/
                 environment:
                         - TZ=${TZ}
                         - WEBPASSWORD=${PIHOLE_PASS}
                         - ServerIP=${SERVER_IP}
-                        - DNS1=127.0.0.1
-                        - DNS2=95.216.212.177
+                        #- VIRTUAL_HOST=pihole.${DOMAIN}
                 labels:
                         - "traefik.enable=true"
                         - "traefik.frontend.rule=HostRegexp:pihole.${DOMAIN},{catchall:.*}"
@@ -94,11 +93,10 @@ services:
                         - 'portainer.${DOMAIN}:${SERVER_IP}'
                         - 'heim.${DOMAIN}:${SERVER_IP}'
                         - 'headphones.${DOMAIN}:${SERVER_IP}'
-                        - 'nzbget.${DOMAIN}:${SERVER_IP}'
-                        - 'sabnzbd.${DOMAIN}:${SERVER_IP}'
                         - 'picard.${DOMAIN}:${SERVER_IP}'
                         - 'netdata.${DOMAIN}:${SERVER_IP}'
                         - 'vpn.${DOMAIN}:${SERVER_IP}'
+                        - 'ha.${DOMAIN}:${SERVER_IP}'
 
         duckdns:
                 image: linuxserver/duckdns
@@ -120,13 +118,13 @@ services:
                 restart: always
                 ports:
                         - "61208:61208"
-                        - "61209:61209"
+                        #- "61209:61209"
                 volumes:
                         - /opt/glances:/etc/glances
                         - /var/run/docker.sock:/var/run/docker.sock:ro
                 environment:
-                        #- GLANCES_OPT=-w       # WEBSERVER
-                        - GLANCES_OPT=-s -B 0.0.0.0 -p 61209    # SERVER
+                        - GLANCES_OPT=-w       # WEBSERVER
+                        #- GLANCES_OPT=-s -B 0.0.0.0 -p 61209    # SERVER
                 labels:
                         - "traefik.enable=true"
                         - "traefik.frontend.rule=HostRegexp:glances.${DOMAIN},{catchall:.*}"
