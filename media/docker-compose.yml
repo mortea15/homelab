@@ -41,7 +41,7 @@ services:
                 image: linuxserver/airsonic
                 hostname: airsonic
                 container_name: airsonic
-                restart: always
+                restart: unless-stopped
                 ports:
                         - "4040:4040"
                         - "1901:1900/udp"
@@ -163,7 +163,7 @@ services:
                 image: linuxserver/lidarr
                 hostname: lidarr
                 container_name: lidarr
-                restart: always
+                restart: unless-stopped
                 ports:
                         - "8686:8686"
                 volumes:
@@ -191,7 +191,7 @@ services:
                 image: linuxserver/headphones
                 hostname: headphones
                 container_name: headphones
-                restart: always
+                restart: unless-stopped
                 ports:
                         - "8181:8181"
                 volumes:
@@ -218,7 +218,7 @@ services:
                 image: mikenye/picard
                 hostname: picard
                 container_name: picard
-                restart: always
+                restart: unless-stopped
                 ports:
                         - "5800:5800"
                 volumes:
@@ -275,7 +275,7 @@ services:
                 image: mortea15/youtag-dl
                 hostname: ytdl
                 container_name: ytdl
-                restart: always
+                restart: unless-stopped
                 ports:
                         - "8083:8080"
                 volumes:
@@ -327,6 +327,8 @@ services:
                 image: dperson/openvpn-client
                 container_name: cloak
                 restart: always
+                ports:
+                  - "9091:9091"
                 volumes:
                         - /opt/cloak/ovpn:/ovpn
                 environment:
@@ -335,7 +337,7 @@ services:
                         default:
                                 ipv4_address: 10.10.10.5
                 dns:
-                        - 10.10.10.53
+                        - 192.168.0.105
                         - 1.1.1.1
                 cap_add:
                         - NET_ADMIN
