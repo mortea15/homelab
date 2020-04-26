@@ -324,13 +324,13 @@ services:
                                 ipv4_address: 10.10.10.130
 
         cloak:
-                image: dperson/openvpn-client
+                image: mortea15/cloak
                 container_name: cloak
-                restart: always
+                restart: on-failure
                 ports:
                   - "9091:9091"
                 volumes:
-                        - /opt/cloak/ovpn:/ovpn
+                        - /opt/.cloak:/vpn
                 environment:
                         - TZ=EST
                 networks:
@@ -343,7 +343,6 @@ services:
                         - NET_ADMIN
                 devices:
                         - /dev/net/tun
-                command: openvpn --config /ovpn/germany.ovpn --auth-user-pass /ovpn/vpn.auth --auth-nocache
 networks:
         default:
                 external:
