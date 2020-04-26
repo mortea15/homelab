@@ -1,263 +1,268 @@
 version: "3"
 services:
-        traefik:
-                image: traefik
-                hostname: traefik
-                container_name: traefik
-                restart: always
-                ports:
-                        - "80:80"
-                        - "443:443"
-                        - "8080:8080"
-                volumes:
-                        - /var/run/docker.sock:/var/run/docker.sock:ro
-                        - /opt/traefik/traefik.yml:/etc/traefik/traefik.yml
-                        - /opt/traefik/le/duck/acme.json:/etc/traefik/le/duck/acme.json
-                        - /opt/traefik/le/nc/acme.json:/etc/traefik/le/nc/acme.json
-                environment:
-                        - DUCKDNS_TOKEN=${DUCKDNS_TOKEN}
-                        - NAMECHEAP_API_USER=${NAMECHEAP_USER}
-                        - NAMECHEAP_API_KEY=${NAMECHEAP_KEY}
-                labels:
-                        - "traefik.enable=true"
-                        - "traefik.port=8080"
-                        - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)"
-                        - "traefik.http.services.traefik.loadbalancer.server.port=8080"
-                        - "traefik.http.routers.api.service=api@internal"
-                        # TLS
-                        # [le-dns-nc, le-dns-duck]
-                        - "traefik.http.routers.traefik.tls.certresolver=le-dns-nc"
-                        - "traefik.http.routers.traefik.tls.domains[0].main=*.${DOMAIN}"
-                        - "traefik.http.routers.traefik.tls.domains[0].sans=${DOMAIN}"
-                        # HTTP => HTTPS
-                        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-                        - "traefik.http.routers.redirect-https.rule=hostregexp(`{host:.+}`)"
-                        - "traefik.http.routers.redirect-https.entrypoints=web"
-                        - "traefik.http.routers.redirect-https.middlewares=redirect-to-https"
-                networks:
-                        default:
-                                ipv4_address: 10.10.10.10
+  traefik:
+    image: traefik
+    hostname: traefik
+    container_name: traefik
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /opt/traefik/traefik.yml:/etc/traefik/traefik.yml
+      - /opt/traefik/le/duck/acme.json:/etc/traefik/le/duck/acme.json
+      - /opt/traefik/le/nc/acme.json:/etc/traefik/le/nc/acme.json
+    environment:
+      - DUCKDNS_TOKEN=${DUCKDNS_TOKEN}
+      - NAMECHEAP_API_USER=${NAMECHEAP_USER}
+      - NAMECHEAP_API_KEY=${NAMECHEAP_KEY}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.port=8080"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+      - "traefik.http.routers.api.service=api@internal"
+      # TLS
+      # [le-dns-nc, le-dns-duck]
+      - "traefik.http.routers.traefik.tls.certresolver=le-dns-nc"
+      - "traefik.http.routers.traefik.tls.domains[0].main=*.${DOMAIN}"
+      - "traefik.http.routers.traefik.tls.domains[0].sans=${DOMAIN}"
+      # HTTP => HTTPS
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.redirect-https.rule=hostregexp(`{host:.+}`)"
+      - "traefik.http.routers.redirect-https.entrypoints=web"
+      - "traefik.http.routers.redirect-https.middlewares=redirect-to-https"
+    networks:
+      default:
+        ipv4_address: 10.10.10.10
 
-        pihole:
-                image: pihole/pihole:latest
-                hostname: pihole
-                container_name: pihole
-                restart: always
-                ports:
-                        - "8053:80/tcp"
-                        - "53:53/tcp"
-                        - "53:53/udp"
-                        - "67:67/udp"
-                        - "8443:443/tcp"
-                volumes:
-                        - /opt/pihole/:/etc/pihole/
-                        - /opt/dnsmasq.d/:/etc/dnsmasq.d/
-                environment:
-                        - TZ=${TZ}
-                        - WEBPASSWORD=${PIHOLE_PASS}
-                        - ServerIP=${SERVER_IP}
-                        #- VIRTUAL_HOST=pihole.${DOMAIN}
-                labels:
-                        - "traefik.enable=true"
-                        - "traefik.frontend.rule=HostRegexp:pihole.${DOMAIN},{catchall:.*}"
-                        - "traefik.frontend.priority=1"
-                        - "traefik.backend=pihole"
-                        - "traefik.port=80"
-                        - "traefik.http.routers.pihole.rule=Host(`pihole.${DOMAIN}`)"
-                        - "traefik.http.services.pihole.loadbalancer.server.port=80"
-                        - "traefik.http.middlewares.pihole_add_admin.addprefix.prefix=/admin"
-                        - "traefik.http.routers.pihole.middlewares=pihole_add_admin"
-                        - "traefik.http.routers.pihole.tls.certresolver=le-dns-nc"
-                networks:
-                        default:
-                                ipv4_address: 10.10.10.53
-                dns:
-                        - 127.0.0.1
-                        - 95.216.212.177
-                cap_add:
-                        - NET_ADMIN
-                extra_hosts:
-                        - '${DOMAIN}:${SERVER_IP}'
-                        - 'plex.${DOMAIN}:${SERVER_IP}'
-                        - 'radarr.${DOMAIN}:${SERVER_IP}'
-                        - 'sonarr.${DOMAIN}:${SERVER_IP}'
-                        - 'bazarr.${DOMAIN}:${SERVER_IP}'
-                        - 'lidarr.${DOMAIN}:${SERVER_IP}'
-                        - 'airsonic.${DOMAIN}:${SERVER_IP}'
-                        - 'bit.${DOMAIN}:${SERVER_IP}'
-                        - 'ytdl.${DOMAIN}:${SERVER_IP}'
-                        - 'jackett.${DOMAIN}:${SERVER_IP}'
-                        - 'traefik.${DOMAIN}:${SERVER_IP}'
-                        - 'pihole.${DOMAIN}:${SERVER_IP}'
-                        - 'glances.${DOMAIN}:${SERVER_IP}'
-                        - 'portainer.${DOMAIN}:${SERVER_IP}'
-                        - 'heim.${DOMAIN}:${SERVER_IP}'
-                        - 'headphones.${DOMAIN}:${SERVER_IP}'
-                        - 'picard.${DOMAIN}:${SERVER_IP}'
-                        - 'netdata.${DOMAIN}:${SERVER_IP}'
-                        - 'vpn.${DOMAIN}:${SERVER_IP}'
-                        - 'ha.${DOMAIN}:${SERVER_IP}'
+  pihole:
+    image: pihole/pihole:latest
+    hostname: pihole.${DOMAIN}
+    container_name: pihole
+    restart: always
+    volumes:
+      - /opt/pihole/:/etc/pihole/
+      - /opt/dnsmasq.d/:/etc/dnsmasq.d/
+    environment:
+      - TZ=${TZ}
+      - WEBPASSWORD=${PIHOLE_PASS}
+      - ServerIP=${SERVER_IP}
+      - VIRTUAL_HOST=pihole.${DOMAIN}
+      - PROXY_LOCATION=pihole
+      - FTL_CMD=debug
+      - DNSMASQ_LISTENING=all
+      - DNS1=95.216.212.177
+      - DNS2=1.1.1.1
+      - INTERFACE=eno1
+      - WEB_PORT=8053
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=HostRegexp:pihole.${DOMAIN},{catchall:.*}"
+      - "traefik.frontend.priority=1"
+      - "traefik.backend=pihole"
+      - "traefik.port=8053"
+      - "traefik.http.routers.pihole.rule=Host(`pihole.${DOMAIN}`)"
+      - "traefik.http.services.pihole.loadbalancer.server.port=8053"
+      - "traefik.http.middlewares.pihole_add_admin.addprefix.prefix=/admin"
+      - "traefik.http.routers.pihole.middlewares=pihole_add_admin"
+      - "traefik.http.routers.pihole.tls.certresolver=le-dns-nc"
+    network_mode: host
+    dns:
+      - 127.0.0.1
+      - 95.216.212.177
+    cap_add:
+      - NET_ADMIN
+    extra_hosts:
+      - '${DOMAIN}:${SERVER_IP}'
+      - 'plex.${DOMAIN}:${SERVER_IP}'
+      - 'radarr.${DOMAIN}:${SERVER_IP}'
+      - 'sonarr.${DOMAIN}:${SERVER_IP}'
+      - 'bazarr.${DOMAIN}:${SERVER_IP}'
+      - 'lidarr.${DOMAIN}:${SERVER_IP}'
+      - 'airsonic.${DOMAIN}:${SERVER_IP}'
+      - 'bit.${DOMAIN}:${SERVER_IP}'
+      - 'ytdl.${DOMAIN}:${SERVER_IP}'
+      - 'jackett.${DOMAIN}:${SERVER_IP}'
+      - 'traefik.${DOMAIN}:${SERVER_IP}'
+      - 'pihole.${DOMAIN}:${SERVER_IP}'
+      - 'glances.${DOMAIN}:${SERVER_IP}'
+      - 'portainer.${DOMAIN}:${SERVER_IP}'
+      - 'heim.${DOMAIN}:${SERVER_IP}'
+      - 'headphones.${DOMAIN}:${SERVER_IP}'
+      - 'picard.${DOMAIN}:${SERVER_IP}'
+      - 'netdata.${DOMAIN}:${SERVER_IP}'
+      - 'vpn.${DOMAIN}:${SERVER_IP}'
+      - 'ha.${DOMAIN}:${SERVER_IP}'
+      - 'ff.${DOMAIN}:${SERVER_IP}'
 
-        duckdns:
-                image: linuxserver/duckdns
-                hostname: duckdns
-                container_name: duckdns
-                restart: always
-                volumes:
-                        - /opt/duckdns:/config
-                environment:
-                        - PUID=1000
-                        - PGID=985
-                        - TZ=${TZ}
-                        - SUBDOMAINS=${DUCKDNS_SUBDOMAINS}
-                        - TOKEN=${DUCKDNS_TOKEN}
-        glances:
-                image: vimagick/glances
-                hostname: glances
-                container_name: glances
-                restart: always
-                ports:
-                        - "61208:61208"
-                        #- "61209:61209"
-                volumes:
-                        - /opt/glances:/etc/glances
-                        - /var/run/docker.sock:/var/run/docker.sock:ro
-                environment:
-                        - GLANCES_OPT=-w       # WEBSERVER
-                        #- GLANCES_OPT=-s -B 0.0.0.0 -p 61209    # SERVER
-                labels:
-                        - "traefik.enable=true"
-                        - "traefik.frontend.rule=HostRegexp:glances.${DOMAIN},{catchall:.*}"
-                        - "traefik.frontend.priority=1"
-                        - "traefik.backend=glances"
-                        - "traefik.port=61208"
-                        - "traefik.http.routers.glances.rule=Host(`glances.${DOMAIN}`)"
-                        - "traefik.http.services.glances.loadbalancer.server.port=61208"
-                        - "traefik.http.routers.glances.tls.certresolver=le-dns-nc"
-                #net: host
-                networks:
-                        default:
-                                ipv4_address: 10.10.10.20
-                pid: host
-        portainer:
-                image: portainer/portainer
-                hostname: portainer
-                container_name: portainer
-                restart: always
-                ports:
-                        - "9000:9000"
-                        - "8000:8000"
-                volumes:
-                        - /var/run/docker.sock:/var/run/docker.sock
-                        - /opt/portainer:/data
-                labels:
-                        - "traefik.enable=true"
-                        - "traefik.frontend.rule=HostRegexp:portainer.${DOMAIN},{catchall:.*}"
-                        - "traefik.frontend.priority=1"
-                        - "traefik.backend=portainer"
-                        - "traefik.port=9000"
-                        - "traefik.http.routers.portainer.rule=Host(`portainer.${DOMAIN}`)"
-                        - "traefik.http.services.portainer.loadbalancer.server.port=9000"
-                        - "traefik.http.routers.portainer.tls.certresolver=le-dns-nc"
-                networks:
-                        default:
-                                ipv4_address: 10.10.10.21
-        netdata:
-                image: netdata/netdata
-                hostname: netdata
-                container_name: netdata
-                restart: always
-                ports:
-                        - "19999:19999"
-                volumes:
-                        - /etc/passwd:/host/etc/passwd:ro
-                        - /etc/group:/host/etc/group:ro
-                        - /proc:/host/proc:ro
-                        - /sys:/host/sys:ro
-                        - /var/run/docker.sock:/var/run/docker.sock:ro
-                environment:
-                        - TZ=${TZ}
-                        - PGID=977
-                labels:
-                        - "traefik.enable=true"
-                        - "traefik.frontend.rule=HostRegexp:netdata.${DOMAIN},{catchall:.*}"
-                        - "traefik.frontend.priority=1"
-                        - "traefik.backend=netdata"
-                        - "traefik.port=19999"
-                        - "traefik.http.routers.netdata.rule=Host(`netdata.${DOMAIN}`)"
-                        - "traefik.http.services.netdata.loadbalancer.server.port=19999"
-                        - "traefik.http.routers.netdata.tls.certresolver=le-dns-nc"
-                networks:
-                        default:
-                                ipv4_address: 10.10.10.22
-                cap_add:
-                        - SYS_PTRACE
-                security_opt:
-                        - apparmor:unconfined
-        openvpn:
-                image: kylemanna/openvpn
-                hostname: openvpn
-                container_name: openvpn
-                restart: always
-                ports:
-                        - "1194:1194/udp"
-                        - "7505:7505"
-                volumes:
-                        - /opt/openvpn:/etc/openvpn
-                environment:
-                        - TZ=${TZ}
-                labels:
-                        - "traefik.enable=true"
-                        - "traefik.frontend.rule=HostRegexp:ra.${DOMAIN},{catchall:.*}"
-                        - "traefik.frontend.priority=1"
-                        - "traefik.backend=openvpn"
-                        - "traefik.port=1194"
-                        - "traefik.http.routers.openvpn.rule=Host(`ra.${DOMAIN}`)"
-                        - "traefik.http.services.openvpn.loadbalancer.server.port=1194"
-                        - "traefik.http.routers.openvpn.tls.certresolver=le-dns-nc"
-                networks:
-                        default:
-                                ipv4_address: 10.10.10.11
-                cap_add:
-                        - NET_ADMIN
-        openvpn_mgmt:
-                image: ruimarinho/openvpn-monitor
-                hostname: openvpn_mgmt
-                container_name: openvpn_mgmt
-                restart: always
-                environment:
-                        - OPENVPNMONITOR_DEFAULT_DATETIMEFORMAT="%%d/%%m/%%Y"
-                        - OPENVPNMONITOR_DEFAULT_LATITUDE=63
-                        - OPENVPNMONITOR_DEFAULT_LONGITUDE=10
-                        - OPENVPNMONITOR_DEFAULT_MAPS=False
-                        - OPENVPNMONITOR_DEFAULT_SITE=mediarch
-                        - OPENVPNMONITOR_SITES_0_ALIAS=mediarch
-                        - OPENVPNMONITOR_SITES_0_HOST=openvpn
-                        - OPENVPNMONITOR_SITES_0_NAME=mediarch
-                        - OPENVPNMONITOR_SITES_0_PORT=7505
-                labels:
-                        - "traefik.enable=true"
-                        - "traefik.frontend.rule=HostRegexp:vpn.${DOMAIN},{catchall:.*}"
-                        - "traefik.frontend.priority=1"
-                        - "traefik.backend=vpn_mgmt"
-                        - "traefik.port=80"
-                        - "traefik.http.routers.vpn_mgmt.rule=Host(`vpn.${DOMAIN}`)"
-                        - "traefik.http.services.vpn_mgmt.loadbalancer.server.port=80"
-                        - "traefik.http.routers.vpn_mgmt.tls.certresolver=le-dns-nc"
-                networks:
-                        default:
-                                ipv4_address: 10.10.10.12
+  duckdns:
+    image: linuxserver/duckdns
+    hostname: duckdns
+    container_name: duckdns
+    restart: always
+    volumes:
+      - /opt/duckdns:/config
+    environment:
+      - PUID=1000
+      - PGID=985
+      - TZ=${TZ}
+      - SUBDOMAINS=${DUCKDNS_SUBDOMAINS}
+      - TOKEN=${DUCKDNS_TOKEN}
 
-        antibox:
-                image: mortea15/antibox:cron
-                hostname: antibox
-                container_name: antibox
-                restart: always
-                #volumes:
-                        #- /var/log/antibox.log:/var/log/antibox.log
-                env_file:
-                        - antibox/list.env
+  glances:
+    image: vimagick/glances
+    hostname: glances
+    container_name: glances
+    restart: always
+    ports:
+      - "61208:61208"
+      #- "61209:61209"
+    volumes:
+      - /opt/glances:/etc/glances
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - GLANCES_OPT=-w       # WEBSERVER
+      #- GLANCES_OPT=-s -B 0.0.0.0 -p 61209    # SERVER
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=HostRegexp:glances.${DOMAIN},{catchall:.*}"
+      - "traefik.frontend.priority=1"
+      - "traefik.backend=glances"
+      - "traefik.port=61208"
+      - "traefik.http.routers.glances.rule=Host(`glances.${DOMAIN}`)"
+      - "traefik.http.services.glances.loadbalancer.server.port=61208"
+      - "traefik.http.routers.glances.tls.certresolver=le-dns-nc"
+    networks:
+      default:
+        ipv4_address: 10.10.10.20
+    pid: host
+
+  portainer:
+    image: portainer/portainer
+    hostname: portainer
+    container_name: portainer
+    restart: always
+    ports:
+      - "9000:9000"
+      - "8000:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/portainer:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=HostRegexp:portainer.${DOMAIN},{catchall:.*}"
+      - "traefik.frontend.priority=1"
+      - "traefik.backend=portainer"
+      - "traefik.port=9000"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.${DOMAIN}`)"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+      - "traefik.http.routers.portainer.tls.certresolver=le-dns-nc"
+    networks:
+      default:
+        ipv4_address: 10.10.10.21
+
+  netdata:
+    image: netdata/netdata
+    hostname: netdata
+    container_name: netdata
+    restart: always
+    ports:
+      - "19999:19999"
+    volumes:
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - TZ=${TZ}
+      - PGID=977
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=HostRegexp:netdata.${DOMAIN},{catchall:.*}"
+      - "traefik.frontend.priority=1"
+      - "traefik.backend=netdata"
+      - "traefik.port=19999"
+      - "traefik.http.routers.netdata.rule=Host(`netdata.${DOMAIN}`)"
+      - "traefik.http.services.netdata.loadbalancer.server.port=19999"
+      - "traefik.http.routers.netdata.tls.certresolver=le-dns-nc"
+    networks:
+      default:
+        ipv4_address: 10.10.10.22
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+
+  openvpn:
+    image: kylemanna/openvpn
+    hostname: openvpn
+    container_name: openvpn
+    restart: always
+    ports:
+      - "1194:1194/udp"
+      - "7505:7505"
+    volumes:
+      - /opt/openvpn:/etc/openvpn
+    environment:
+      - TZ=${TZ}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=HostRegexp:ra.${DOMAIN},{catchall:.*}"
+      - "traefik.frontend.priority=1"
+      - "traefik.backend=openvpn"
+      - "traefik.port=1194"
+      - "traefik.http.routers.openvpn.rule=Host(`ra.${DOMAIN}`)"
+      - "traefik.http.services.openvpn.loadbalancer.server.port=1194"
+      - "traefik.http.routers.openvpn.tls.certresolver=le-dns-nc"
+    networks:
+      default:
+        ipv4_address: 10.10.10.11
+    cap_add:
+      - NET_ADMIN
+
+  openvpn_mgmt:
+    image: ruimarinho/openvpn-monitor
+    hostname: openvpn_mgmt
+    container_name: openvpn_mgmt
+    restart: always
+    environment:
+      - OPENVPNMONITOR_DEFAULT_DATETIMEFORMAT="%%d/%%m/%%Y"
+      - OPENVPNMONITOR_DEFAULT_LATITUDE=63
+      - OPENVPNMONITOR_DEFAULT_LONGITUDE=10
+      - OPENVPNMONITOR_DEFAULT_MAPS=False
+      - OPENVPNMONITOR_DEFAULT_SITE=mediarch
+      - OPENVPNMONITOR_SITES_0_ALIAS=mediarch
+      - OPENVPNMONITOR_SITES_0_HOST=openvpn
+      - OPENVPNMONITOR_SITES_0_NAME=mediarch
+      - OPENVPNMONITOR_SITES_0_PORT=7505
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=HostRegexp:vpn.${DOMAIN},{catchall:.*}"
+      - "traefik.frontend.priority=1"
+      - "traefik.backend=vpn_mgmt"
+      - "traefik.port=80"
+      - "traefik.http.routers.vpn_mgmt.rule=Host(`vpn.${DOMAIN}`)"
+      - "traefik.http.services.vpn_mgmt.loadbalancer.server.port=80"
+      - "traefik.http.routers.vpn_mgmt.tls.certresolver=le-dns-nc"
+    networks:
+      default:
+        ipv4_address: 10.10.10.12
+
+  antibox:
+    image: mortea15/antibox:cron
+    hostname: antibox
+    container_name: antibox
+    restart: always
+    #volumes:
+      #- /var/log/antibox.log:/var/log/antibox.log
+    env_file:
+      - antibox/list.env
+
 networks:
-        default:
-                external:
-                        name: labnet
+  default:
+    external:
+      name: labnet
