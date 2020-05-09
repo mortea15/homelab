@@ -1,0 +1,35 @@
+version: "3"
+services:
+  hassio:
+    image: homeassistant/home-assistant:stable
+    hostname: hassio
+    container_name: hassio
+    restart: always
+    ports:
+      - "8123:8123"
+    volumes:
+      - /opt/hassio:/config
+    environment:
+      - PUID=1000
+      - PGID=985
+      - TZ=${TZ}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=HostRegexp:ha.${DOMAIN},{catchall:.*}"
+      - "traefik.frontend.priority=1"
+      - "traefik.backend=hassio"
+      - "traefik.port=8123"
+      - "traefik.http.routers.hassio.rule=Host(`ha.${DOMAIN}`)"
+      - "traefik.http.services.hassio.loadbalancer.server.port=8123"
+      - "traefik.http.routers.hassio.tls.certresolver=le-dns-nc"
+    networks:
+      default:
+        ipv4_address: 10.10.10.119
+    #network_mode: host
+    #devices:
+      #- /dev/ttyUSB0:/dev/ttyUSB0
+
+networks:
+  default:
+    external:
+      name: labnet

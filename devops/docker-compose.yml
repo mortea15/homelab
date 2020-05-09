@@ -82,7 +82,6 @@ services:
       - 'sonarr.${DOMAIN}:${SERVER_IP}'
       - 'bazarr.${DOMAIN}:${SERVER_IP}'
       - 'lidarr.${DOMAIN}:${SERVER_IP}'
-      - 'airsonic.${DOMAIN}:${SERVER_IP}'
       - 'bit.${DOMAIN}:${SERVER_IP}'
       - 'ytdl.${DOMAIN}:${SERVER_IP}'
       - 'jackett.${DOMAIN}:${SERVER_IP}'
@@ -91,26 +90,10 @@ services:
       - 'glances.${DOMAIN}:${SERVER_IP}'
       - 'portainer.${DOMAIN}:${SERVER_IP}'
       - 'heim.${DOMAIN}:${SERVER_IP}'
-      - 'headphones.${DOMAIN}:${SERVER_IP}'
-      - 'picard.${DOMAIN}:${SERVER_IP}'
       - 'netdata.${DOMAIN}:${SERVER_IP}'
       - 'vpn.${DOMAIN}:${SERVER_IP}'
       - 'ha.${DOMAIN}:${SERVER_IP}'
-      - 'ff.${DOMAIN}:${SERVER_IP}'
-
-  duckdns:
-    image: linuxserver/duckdns
-    hostname: duckdns
-    container_name: duckdns
-    restart: always
-    volumes:
-      - /opt/duckdns:/config
-    environment:
-      - PUID=1000
-      - PGID=985
-      - TZ=${TZ}
-      - SUBDOMAINS=${DUCKDNS_SUBDOMAINS}
-      - TOKEN=${DUCKDNS_TOKEN}
+      - 'code.${DOMAIN}:${SERVER_IP}'
 
   glances:
     image: vimagick/glances

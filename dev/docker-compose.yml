@@ -1,0 +1,37 @@
+version: "3"
+services:
+  code:
+    image: linuxserver/code-server
+    hostname: code
+    container_name: code
+    restart: unless-stopped
+    ports:
+      - "8443:8443"
+    volumes:
+      - /opt/code:/config
+      - /home/morty/homelab:/homelab
+    environment:
+      - PUID=1000
+      - PGID=985
+      - TZ=${TZ}
+      #- PASSWORD=${CODE_PW}
+      - SUDO_PASSWORD=${CODE_SUDO_PW}
+    env_file:
+      - mods.env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=HostRegexp:code.${DOMAIN},{catchall:.*}"
+      - "traefik.frontend.priority=1"
+      - "traefik.backend=code"
+      - "traefik.port=8443"
+      - "traefik.http.routers.code.rule=Host(`heim.${DOMAIN}`)"
+      - "traefik.http.services.code.loadbalancer.server.port=80"
+      - "traefik.http.routers.code.tls.certresolver=le-dns-nc"
+    networks:
+      default:
+        ipv4_address: 10.10.10.160
+
+networks:
+  default:
+    external:
+      name: labnet
